@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2025 Fantasy Draft — Slow Reveal</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ef4444;--muted:#94a3b8;color-scheme:dark}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#071024 0%, #07121a 100%);display:flex;align-items:center;justify-content:center;padding:24px}
+    .container{width:980px;max-width:96%;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:12px;padding:20px;box-shadow:0 8px 30px rgba(2,6,23,.6)}
+    header{display:flex;align-items:center;gap:12px}
+    h1{margin:0;font-size:20px}
+    .subtitle{color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;margin-top:16px}
+    button{background:var(--accent);border:0;padding:10px 14px;border-radius:8px;color:white;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+    .panel{margin-top:18px;background:rgba(255,255,255,0.02);padding:16px;border-radius:10px}
+    .line{display:flex;align-items:flex-start;gap:12px;padding:10px;border-radius:8px}
+    .picknum{min-width:56px;font-weight:700;font-size:14px;color:var(--accent)}
+    .team{font-weight:700}
+    .comment{color:var(--muted);margin-top:6px}
+    .reveal-area{min-height:260px;display:flex;flex-direction:column;gap:8px}
+    footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center}
+    .intro{background:linear-gradient(90deg,rgba(239,68,68,.06),transparent);padding:12px;border-radius:8px}
+    .big{font-size:18px;font-weight:800}
+    .copy-btn{background:transparent;border:1px dashed rgba(255,255,255,0.06);padding:6px 8px;border-radius:6px;color:var(--muted);cursor:pointer}
+    @media (max-width:600px){.container{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>2025 - Oblong Pigskins Fantasy Football League</h1>
+        <!--<div class="subtitle"><strong>Draft Order Reveal.</strong></div>-->
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <!--<div class="subtitle">Locked spot: <strong>David — #8</strong></div>
+        <div class="subtitle">Copy lines to paste in your league chat.</div>-->
+      </div>
+    </header>
+
+    <div class="controls">
+      <button id="revealBtn">Reveal Next</button>
+      <!--<button class="secondary" id="autoBtn">Auto Reveal All</button>-->
+      <!--<button class="secondary" id="resetBtn">Reset</button>-->
+      <!--<button class="secondary" id="copyAllBtn">Copy Full Script</button>-->
+    </div>
+
+    <div class="panel">
+      <div class="intro">
+        <div class="big">🎬 Draft Order Reveal</div>
+        <!--<div class="subtitle">Post this before you start dropping picks to hype the league:</div>-->
+        <div style="margin-top:8px;font-size:14px;color:var(--muted)">“Alright degenerates — the draft order is locked. No spoilers. Grab a drink, lose your dignity, and let the trash talk begin.”</div>
+        <div style="margin-top:8px;color:var(--muted)">(Press <strong>Reveal Next</strong>)</div>
+      </div>
+
+      <div class="reveal-area" id="revealArea">
+        <!-- revealed picks go here -->
+      </div>
+
+      <footer>
+        <!--<div class="subtitle">When finished, post this outro to close the show:</div>
+        <div style="text-align:right">
+          <div class="subtitle">Outro ready — click <strong>Copy Full Script</strong> to grab it.</div>-->
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const picks = [
+      {num:12,name:'Evan',line:'“I actually prefer drafting late.” Sure you do, Evan. Enjoy watching 20 guys go before you.'},
+      {num:11,name:'Kelly',line:'Already planning to autodraft… and somehow still finish top 3. Suspicious.'},
+      {num:10,name:'Son',line:'The wildcard. Probably taking a kicker in Round 7 just to ruin vibes.'},
+      {num:9,name:'Jeremy',line:'Draft strategy: draft the guys who already let him down last season. Bold choice.'},
+      {num:8,name:'David (Commish)',line:'The commissioner locks in at the perfect middle spot. Let\'s see if the trash talker can actually back it up this year.'},
+      {num:7,name:'Perlo',line:'Drafting right before the Commish is like being the opening band. No one cares.'},
+      {num:6,name:'Dustin',line:'Like a Netflix show you quit after 3 episodes. Starts hot, collapses by midseason.'},
+      {num:5,name:'Johnny',line:'Thinks his “secret sleepers” from TikTok are hidden gems. Hate to break it to you, Johnny… they\'re not.'},
+      {num:4,name:'Vinh',line:'Draft plan: hope everyone else screws up. Sometimes, it works.'},
+      {num:3,name:'Zeeshan',line:'Drafts like he\'s in Vegas. All-in on upside, usually all-out by Week 6.'},
+      {num:2,name:'Julio',line:'Already preparing his victory parade after Round 1. Reminder: the draft isn\'t won with your first pick.'},
+      {num:1,name:'Vu',line:'Lands the golden ticket. Now let\'s watch him overthink it and screw it up.'}
+    ];
+
+    const revealArea = document.getElementById('revealArea');
+    const revealBtn = document.getElementById('revealBtn');
+    const autoBtn = document.getElementById('autoBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+
+    let index = 0;
+
+    function renderLine(pick){
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.innerHTML = `
+        <div class="picknum">Pick #${pick.num}</div>
+        <div style="flex:1">
+          <div class="team">${pick.name}</div>
+          <div class="comment">${pick.line}</div>
+        </div>
+        <div>
+          <button class="copy-btn" data-text="Pick #${pick.num} – ${pick.name} — ${pick.line}">Copy</button>
+        </div>
+      `;
+      revealArea.appendChild(div);
+      // scroll into view
+      div.scrollIntoView({behavior:'smooth',block:'center'});
+
+      // wire copy button
+      div.querySelector('.copy-btn').addEventListener('click', e=>{
+        const txt = e.currentTarget.getAttribute('data-text');
+        navigator.clipboard.writeText(txt).then(()=>{
+          e.currentTarget.textContent = 'Copied!';
+          setTimeout(()=> e.currentTarget.textContent = 'Copy',1200);
+        }).catch(()=>{
+          alert('Clipboard failed — copy manually.');
+        });
+      });
+    }
+
+    revealBtn.addEventListener('click', ()=>{
+      if(index >= picks.length) return;
+      renderLine(picks[index]);
+      index++;
+      if(index === picks.length){
+        // append outro
+        setTimeout(()=>{
+          const outro = document.createElement('div');
+          outro.className = 'line';
+          outro.innerHTML = `
+            <div class="picknum">🎤</div>
+            <div style="flex:1">
+              <div class="team">Draft Reveal Complete</div>
+              <div class="comment">“Order locked. Now make your excuses, set your autopicks, and may your waiver claims be blessed. Let the trash talk commence.”</div>
+            </div>
+            <div><button class="copy-btn" data-text="Draft Reveal Complete — Order locked. Now make your excuses, set your autopicks, and may your waiver claims be blessed. Let the trash talk commence.">Copy</button></div>
+          `;
+          revealArea.appendChild(outro);
+          outro.scrollIntoView({behavior:'smooth',block:'center'});
+          // wire copy
+          outro.querySelector('.copy-btn').addEventListener('click', e=>{
+            navigator.clipboard.writeText(e.currentTarget.getAttribute('data-text'));
+            e.currentTarget.textContent='Copied!';
+            setTimeout(()=> e.currentTarget.textContent='Copy',1200);
+          });
+        },450);
+      }
+    });
+
+    autoBtn.addEventListener('click', ()=>{
+      // reveal every 650ms
+      if(index >= picks.length) return;
+      const iv = setInterval(()=>{
+        if(index >= picks.length){ clearInterval(iv); return; }
+        revealBtn.click();
+      },650);
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      revealArea.innerHTML=''; index=0;
+    });
+
+    copyAllBtn.addEventListener('click', ()=>{
+      let text = '2025 Fantasy Draft Reveal\n\nIntro:\n"Alright degenerates — the draft order is locked. I\'ll drop one pick at a time. No spoilers. Grab a drink, lose your dignity, and let the trash talk begin."\n\n';
+      picks.forEach(p=> text += `Pick #${p.num} – ${p.name} — ${p.line}\n\n`);
+      text += 'Outro:\n"Draft Reveal Complete. Now make your excuses, set your autopicks, and may your waiver claims be blessed. Let the fun begin!"';
+      navigator.clipboard.writeText(text).then(()=>{
+        alert('Full script copied to clipboard — paste in your league chat.');
+      }).catch(()=> alert('Clipboard failed — open developer console to copy.'));
+    });
+
+    // allow Enter to reveal
+    document.addEventListener('keydown', e=>{
+      if(e.key === 'Enter') revealBtn.click();
+    });
+  </script>
+</body>
+</html>
